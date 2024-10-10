@@ -1,0 +1,15 @@
+body>main>article.center {
+	section.authentication {
+		fieldset.credentials {
+			label {
+				width: 5rem;
+				text-align: right;
+			}
+
+			div.email>input,div.password>input {
+				width: 20rem;
+			}
+		}
+	}
+}
+
