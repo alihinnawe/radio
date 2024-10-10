@@ -55,12 +55,10 @@ class EditorTabController extends TabController {
 
 	async proccessDisplayAlbumEditor () { 
 		const sessionOwner = this.sharedProperties["session-owner"];
-		console.log("sessionOwner",sessionOwner);
 		this.viewsSectionSection.classList.add("hidden");
 		const tableRow = this.editorSectionTemplate.content.firstElementChild.cloneNode(true);
-		const imageCover = tableRow.querySelector("")
-		this.sharedProperties["service-origin"] + "/services/documents" + 
-		
+		const imageCover = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
+		console.log("imageCover",imageCover);
 		this.center.append(tableRow);
 
 		const createdElement = await this.#invokeCreateOrUpdateAlbum(album);
