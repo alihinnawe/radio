@@ -14,12 +14,13 @@ class EditorTabController extends TabController {
 
 		// register controller event listeners 
 		this.addEventListener("activated", event => this.processActivated());
-		this.viewsSectionTemplate.querySelector("div.control>button.create").addEventListener("click",event => this.proccessDisplayAlbumEditor(album));
 
 		// this.addEventListener("deactivated", event => this.processDeactivated());
 	}
 
 	get viewsSectionTemplate () { return document.querySelector("head>template.server-editor"); }
+	get viewsSectionSection () { return document.querySelector("section.server-editor"); }
+
 	get editorSectionTemplate () { return document.querySelector("head>template.server-album-editor"); }
 
 
@@ -31,8 +32,10 @@ class EditorTabController extends TabController {
 		while (this.center.lastElementChild) this.center.lastElementChild.remove();
 		this.center.append(section);
 
-	     const albums = this.#invokeQueryAllAlbums();
-		console.log("albums",albums)
+		this.viewsSectionSection.querySelector("div.control>button.create").addEventListener("click",event => this.proccessDisplayAlbumEditor());
+
+	     //const albums = this.#invokeQueryAllAlbums();
+		//console.log("albums",albums)
 
 
 
@@ -50,10 +53,16 @@ class EditorTabController extends TabController {
 	}
 
 
-	async proccessDisplayAlbumEditor (album = {}) { 
-		this.viewsSectionTemplate.classList.add("hidden");
+	async proccessDisplayAlbumEditor () { 
+		const sessionOwner = this.sharedProperties["session-owner"];
+		console.log("sessionOwner",sessionOwner);
+		this.viewsSectionSection.classList.add("hidden");
 		const tableRow = this.editorSectionTemplate.content.firstElementChild.cloneNode(true);
+		const imageCover = tableRow.querySelector("")
+		this.sharedProperties["service-origin"] + "/services/documents" + 
+		
 		this.center.append(tableRow);
+
 		const createdElement = await this.#invokeCreateOrUpdateAlbum(album);
 		console.log("createdElementcreatedElement",createdElement);
 	}
