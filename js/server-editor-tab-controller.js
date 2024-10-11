@@ -47,7 +47,6 @@ class EditorTabController extends TabController {
 	}
 
 
-
 	async processDisplayAlbumEditor() {
 		const sessionOwner = this.sharedProperties["session-owner"];
 		this.viewsSectionSection.classList.add("hidden");
@@ -60,12 +59,16 @@ class EditorTabController extends TabController {
 		const imageCoverSource = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
 		const imageCoverAvatar = tableRow.querySelector("div.album>span.cover>button>img");
 		imageCoverAvatar.src = imageCoverSource;
-
+	
+		// Immediately save the album
 		const albumIdentity = await this.#invokeSaveAlbum();
-		console.log("albumIdentityalbumIdentity",albumIdentity);
+		console.log("albumIdentity", albumIdentity);
+	
+		// Now allow track creation
 		const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
-		buttonTrack.addEventListener("click",event => this.#invokeCreateOrUpdateTrack(albumIdentity));
+		buttonTrack.addEventListener("click", () => this.#invokeCreateOrUpdateTrack(albumIdentity));
 	}
+	
 	
 
 
@@ -111,48 +114,42 @@ class EditorTabController extends TabController {
 			}, { once: true });  // Ensure the event listener is executed only once
 		});
 	}
-	async #invokeCreateOrUpdateTrack (albumIdentity) {
+
+
+	async #invokeCreateOrUpdateTrack(albumIdentity) {
 		const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
 		this.serverAlbumEditorSectionTable.append(trackTemplate);
-
-		
-
-		actionSubmit.addEventListener("click", async event =>  {
-
+	
+		const actionSubmit = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.submit");
+		actionSubmit.addEventListener("click", async event => {
 			try {
-			// here is the work select the buttons 
-				
 				const ordinal = window.parseInt(this.serverAlbumEditorSectionTable.querySelector("tr>td.ordinal>input").value || "0");
 				const artist = this.serverAlbumEditorSectionTable.querySelector("tr>td.artist>input").value || "";
-				const title = this.serverAlbumEditorSectionTable.querySelector("tr>td.title>input").value || "";;
-				const genre = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input").value || "";;
-
-				const recording = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input");
-				const actionSubmit = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.submit");
-				const actionRemove = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.remove");
-
-				// Update the album object with the latest input values
-				this.#track = { ordinal, artist, title,genre };
-
-				// Call the function to create or update the album
-				const resultTrack = await this.#invokeCreateOrUpdateTrack(albumIdentity,this.#track);
-				console.log(resultTrack); 
-				resolve(resultTrack);
-
-
+				const title = this.serverAlbumEditorSectionTable.querySelector("tr>td.title>input").value || "";
+				const genre = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input").value || "";
+	
+				// Prepare track data
+				this.#track = { ordinal, artist, title, genre };
+				console.log("Track Data:", this.#track);
+	
+				// Save track
+				const resultTrack = await this.#invokeSaveTrack(albumIdentity, this.#track);
+				console.log("Saved Track:", resultTrack);
 			} catch (error) {
-				console.error("Error updating the album:", error);
-				reject(error);     
+				console.error("Error saving track:", error);
 			}
-		}, { once: true });  // Ensure the event listener is executed only once
-	};
+		}, { once: true });
+	}
+	
 			
 			//this.#invokeSaveTrack(albumIdentity))
 
 
 
-	async #invokeCreateOrUpdateTrack(albumIdentity,track) {
+	async #invokeSaveTrack(albumIdentity,track) {
+		//console.log("albumIdentity,trac",albumIdentity,track);
 		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + albumIdentity + "/tracks";
+		console.log("resourrrrrce",resource);
 		const headers = { "Content-Type": "application/json", "Accept": "text/plain" };
 		const response = await fetch(resource, { method: "POST" , headers: headers, body: JSON.stringify(track), credentials: "include" });
 		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
