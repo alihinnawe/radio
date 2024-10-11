@@ -117,29 +117,46 @@ class EditorTabController extends TabController {
 
 
 	async #invokeCreateOrUpdateTrack(albumIdentity) {
-		const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
-		this.serverAlbumEditorSectionTable.append(trackTemplate);
+		// Clear the table before appending new track rows if this is the first time the function is called
+		if (this.serverAlbumEditorSectionTable.children.length === 0) {
+			this.serverAlbumEditorSectionTable.innerHTML = ""; // Clear the table body only when it is first invoked
+		}
 	
-		const actionSubmit = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.submit");
-		actionSubmit.addEventListener("click", async event => {
+		// Clone the track template for a new track
+		const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
+		this.serverAlbumEditorSectionTable.append(trackTemplate); // Add the new track row to the table
+	
+		// Get the submit button for the newly added track row
+		const actionSubmit = trackTemplate.querySelector("td.action>button.submit");
+	
+		// Attach event listener for the submit button in the new track row
+		actionSubmit.addEventListener("click", async (event) => {
 			try {
-				const ordinal = window.parseInt(this.serverAlbumEditorSectionTable.querySelector("tr>td.ordinal>input").value || "0");
-				const artist = this.serverAlbumEditorSectionTable.querySelector("tr>td.artist>input").value || "";
-				const title = this.serverAlbumEditorSectionTable.querySelector("tr>td.title>input").value || "";
-				const genre = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input").value || "";
+				// Get values from the current track row's input fields
+				const ordinal = window.parseInt(trackTemplate.querySelector("td.ordinal>input").value || "0");
+				const artist = trackTemplate.querySelector("td.artist>input").value || "";
+				const title = trackTemplate.querySelector("td.title>input").value || "";
+				const genre = trackTemplate.querySelector("td.genre>input").value || "";
 	
 				// Prepare track data
 				this.#track = { ordinal, artist, title, genre };
 				console.log("Track Data:", this.#track);
 	
-				// Save track
+				// Save track to the server
 				const resultTrack = await this.#invokeSaveTrack(albumIdentity, this.#track);
 				console.log("Saved Track:", resultTrack);
+	
+				// Optionally clear input fields after saving if needed
+				trackTemplate.querySelector("td.ordinal>input").value = "";
+				trackTemplate.querySelector("td.artist>input").value = "";
+				trackTemplate.querySelector("td.title>input").value = "";
+				trackTemplate.querySelector("td.genre>input").value = "";
 			} catch (error) {
 				console.error("Error saving track:", error);
 			}
-		}, { once: true });
+		});
 	}
+	
 	
 			
 			//this.#invokeSaveTrack(albumIdentity))
