@@ -6,6 +6,7 @@ import TabController from "../../../tool/tab-controller.js";
  */
 class EditorTabController extends TabController {
 	#album;
+	#track;
 	/**
 	 * Initializes a new instance.
 	 */
@@ -110,11 +111,52 @@ class EditorTabController extends TabController {
 			}, { once: true });  // Ensure the event listener is executed only once
 		});
 	}
-	async #invokeCreateOrUpdateTrack (albumIdentityObject) {
-		console.log("album identity: ", albumIdentityObject);
+	async #invokeCreateOrUpdateTrack (albumIdentity) {
 		const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
 		this.serverAlbumEditorSectionTable.append(trackTemplate);
 
+		
+
+		actionSubmit.addEventListener("click", async event =>  {
+
+			try {
+			// here is the work select the buttons 
+				
+				const ordinal = window.parseInt(this.serverAlbumEditorSectionTable.querySelector("tr>td.ordinal>input").value || "0");
+				const artist = this.serverAlbumEditorSectionTable.querySelector("tr>td.artist>input").value || "";
+				const title = this.serverAlbumEditorSectionTable.querySelector("tr>td.title>input").value || "";;
+				const genre = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input").value || "";;
+
+				const recording = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input");
+				const actionSubmit = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.submit");
+				const actionRemove = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.remove");
+
+				// Update the album object with the latest input values
+				this.#track = { ordinal, artist, title,genre };
+
+				// Call the function to create or update the album
+				const resultTrack = await this.#invokeCreateOrUpdateTrack(albumIdentity,this.#track);
+				console.log(resultTrack); 
+				resolve(resultTrack);
+
+
+			} catch (error) {
+				console.error("Error updating the album:", error);
+				reject(error);     
+			}
+		}, { once: true });  // Ensure the event listener is executed only once
+	};
+			
+			//this.#invokeSaveTrack(albumIdentity))
+
+
+
+	async #invokeCreateOrUpdateTrack(albumIdentity,track) {
+		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + albumIdentity + "/tracks";
+		const headers = { "Content-Type": "application/json", "Accept": "text/plain" };
+		const response = await fetch(resource, { method: "POST" , headers: headers, body: JSON.stringify(track), credentials: "include" });
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+		return window.parseInt(await response.json());
 	}
 }
 
