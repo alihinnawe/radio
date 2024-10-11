@@ -59,28 +59,11 @@ class EditorTabController extends TabController {
 		const imageCoverSource = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
 		const imageCoverAvatar = tableRow.querySelector("div.album>span.cover>button>img");
 		imageCoverAvatar.src = imageCoverSource;
-	
-		// Add event listener for the save button
-		const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
-		speichernButton.addEventListener("click", event => {
-			// Get the updated values of the inputs when the save button is clicked
-			const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input").value.trim();
-			const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input").value.trim();
-			const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input").value.trim();
-			
-			// Update the album object with the latest input values
-			this.#album = { title, releaseYear, trackCount };
-			
-			// Call the function to create or update the album
-			this.#invokeCreateOrUpdateAlbum(this.#album);
-			const savedAlbums = this.#invokeQueryAllAlbums();
-			console.log("list of all albums",savedAlbums);
-			console.log("album identity",this.#invokeCreateOrUpdateAlbum(this.#album));
-			
-		});
 
+		const albumIdentity = await this.#invokeSaveAlbum();
+		console.log("albumIdentityalbumIdentity",albumIdentity);
 		const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
-		buttonTrack.addEventListener("click",event => this.#invokeCreateOrUpdateTrack(this.#album));
+		buttonTrack.addEventListener("click",event => this.#invokeCreateOrUpdateTrack(albumIdentity));
 	}
 	
 
@@ -96,15 +79,39 @@ class EditorTabController extends TabController {
 	
 	async #invokeQueryAllAlbums () {
 		const resource = this.sharedProperties["service-origin"] + "/services/albums";
-		console.log("resource",resource);
 		const headers = { "Accept": "application/json" };
 		const response = await fetch(resource, { method: "GET" , headers: headers, credentials: "include" });
 		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
 		return response.json();
 	}
 
-	async #invokeCreateOrUpdateTrack () {
-        console.log("track page should be here",this.#invokeQueryAllAlbums());
+	async #invokeSaveAlbum() {
+		// Add event listener for the save button
+		const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
+		return new Promise((resolve, reject) => {
+			speichernButton.addEventListener("click", async event => {
+				try {
+					// Get the updated values of the inputs when the save button is clicked
+					const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input").value.trim();
+					const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input").value.trim();
+					const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input").value.trim();
+	
+					// Update the album object with the latest input values
+					this.#album = { title, releaseYear, trackCount };
+	
+					// Call the function to create or update the album
+					const result = await this.#invokeCreateOrUpdateAlbum(this.#album);
+					console.log(result); 
+					resolve(result);     
+				} catch (error) {
+					console.error("Error updating the album:", error);
+					reject(error);     
+				}
+			}, { once: true });  // Ensure the event listener is executed only once
+		});
+	}
+	async #invokeCreateOrUpdateTrack (albumIdentityObject) {
+		console.log("album identity: ", albumIdentityObject);
 		const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
 		this.serverAlbumEditorSectionTable.append(trackTemplate);
 
