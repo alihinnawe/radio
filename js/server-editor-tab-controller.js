@@ -44,21 +44,22 @@ class EditorTabController extends TabController {
 				const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
 
                 for (let albumTrack of album.trackReferences){
-				const singleTrack = this.#invokeGetTrack(albumTrack); 
-                // console.log("Künstler Name ist: ",singleTrack);
+				const singleTrack = await this.#invokeGetTrack(albumTrack); 
+                console.log("Künstler Name ist: ",singleTrack.artist);
 
                 const accessButton = ServerEditorRowsection.querySelector("td.access>button");
                 const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
 
-                accessButtonImage.scr = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-                console.log("accessButtonImage.scr",accessButtonImage.scr);
-				accessButton.addEventListener("click", event => console.log("test"));
-				// accessButton.querySelector("img").src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-				// tableRow.querySelector("td.artist.text").innerText = album.title || "";
-				// tableRow.querySelector("td.diet").innerText = DIET[recipe.diet] || "";
-				// tableRow.querySelector("td.category").innerText = CATEGORY[recipe.category] || "";
-				// tableRow.querySelector("td.ingredient-count").innerText = recipe.ingredientCount.toString();
-				// tableRow.querySelector("td.modified").innerText = new Date(recipe.modified).toLocaleDateString();
+                accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+				
+                accessButton.addEventListener("click", event => console.log("test"));
+
+                const artist = ServerEditorRowsection.querySelector("td.artist.text");
+                artist.value = singleTrack.artist || "";
+                
+				ServerEditorRowsection.querySelector("td.artist.text").innerText = album.title || "";
+				ServerEditorRowsection.querySelector("td.diet").innerText = DIET[recipe.diet] || "";
+				
                 this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
                 }
 	
