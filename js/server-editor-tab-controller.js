@@ -40,12 +40,12 @@ class EditorTabController extends TabController {
 			
         
 			for (const album of albums_list){
-				console.log("album one is ", album);
+				// console.log("album one is ", album);
 				const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
 
                 for (let albumTrack of album.trackReferences){
 				const singleTrack = await this.#invokeGetTrack(albumTrack); 
-                console.log("Künstler Name ist: ",singleTrack.artist);
+                // console.log("Künstler Name ist: ",singleTrack.artist);
 
                 const accessButton = ServerEditorRowsection.querySelector("td.access>button");
                 const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
@@ -67,8 +67,8 @@ class EditorTabController extends TabController {
                 year.innerText= parseInt(album.releaseYear || "0");
 
 				const tracks = ServerEditorRowsection.querySelector("td.track-count.number");
-                tracks.innerText = parseInt(album.trackReferences[0] || "0");
-
+                tracks.innerText = `${parseInt(album.trackReferences[0]|| "0") + "/" + album.trackCount}`;
+                console.log(parseInt(album.trackReferences[0]),album.trackCount);
                 this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
                 }
 	
