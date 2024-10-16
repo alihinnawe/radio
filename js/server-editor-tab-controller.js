@@ -55,11 +55,20 @@ class EditorTabController extends TabController {
                 accessButton.addEventListener("click", event => console.log("test"));
 
                 const artist = ServerEditorRowsection.querySelector("td.artist.text");
-                artist.value = singleTrack.artist || "";
-                
-				ServerEditorRowsection.querySelector("td.artist.text").innerText = album.title || "";
-				ServerEditorRowsection.querySelector("td.diet").innerText = DIET[recipe.diet] || "";
-				
+                artist.innerText = singleTrack.artist || "";
+
+				const title = ServerEditorRowsection.querySelector("td.title.text");
+                title.innerText = album.title || "";
+
+				const genre = ServerEditorRowsection.querySelector("td.genre.text");
+                genre.innerText = album.genre || "";
+
+                const year = ServerEditorRowsection.querySelector("td.release-year.number");
+                year.innerText= parseInt(album.releaseYear || "0");
+
+				const tracks = ServerEditorRowsection.querySelector("td.track-count.number");
+                tracks.innerText = parseInt(album.trackReferences[0] || "0");
+
                 this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
                 }
 	
