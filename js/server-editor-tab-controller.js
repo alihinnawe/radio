@@ -18,9 +18,9 @@ class EditorTabController extends TabController {
     }
 
     get viewsSectionTemplate() { return document.querySelector("head>template.server-editor"); }
-	get viewsServerEditorRowTemplate() { return document.querySelector("head>template.server-editor-row"); }
-	get viewsServerEditorRowSection() { return this.center.querySelector("section.template.server-editor-row"); }
-    get viewsSectionSection() { return document.querySelector("section.server-editor"); }
+    get viewsSectionSection() { return this.center.querySelector("section.server-editor"); }
+    get viewsServerEditorRowTemplate() { return document.querySelector("head>template.server-editor-row"); }
+	get viewsServerEditorRowSection() { return this.viewsSectionSection.querySelector("section.server-editor-row"); }
     get editorSectionTemplate() { return document.querySelector("head>template.server-album-editor"); }
     get serverAlbumEditorSection() { return this.center.querySelector("section.server-album-editor"); }
     get editorTrackTemplate() { return document.querySelector("head>template.server-album-editor-row"); }
@@ -40,9 +40,31 @@ class EditorTabController extends TabController {
 			
         
 			for (const album of albums_list){
+				console.log("album one is ", album);
 				const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
 
-				this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
+                for (let albumTrack of album.trackReferences){
+				const singleTrack = this.#invokeGetTrack(albumTrack); 
+                // console.log("Künstler Name ist: ",singleTrack);
+
+                const accessButton = ServerEditorRowsection.querySelector("td.access>button");
+                const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
+
+                accessButtonImage.scr = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+                console.log("accessButtonImage.scr",accessButtonImage.scr);
+				accessButton.addEventListener("click", event => console.log("test"));
+				// accessButton.querySelector("img").src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+				// tableRow.querySelector("td.artist.text").innerText = album.title || "";
+				// tableRow.querySelector("td.diet").innerText = DIET[recipe.diet] || "";
+				// tableRow.querySelector("td.category").innerText = CATEGORY[recipe.category] || "";
+				// tableRow.querySelector("td.ingredient-count").innerText = recipe.ingredientCount.toString();
+				// tableRow.querySelector("td.modified").innerText = new Date(recipe.modified).toLocaleDateString();
+                this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
+                }
+	
+
+				
+
 			}
         } catch (error) {
             console.error("Error fetching albums:", error);
@@ -155,6 +177,19 @@ class EditorTabController extends TabController {
                 console.error("Error saving track:", error);
             }
         });
+    }
+
+    async #invokeGetTrack(albumTrackNumber){
+        const resource = this.sharedProperties["service-origin"] + "/services/tracks/"  +  albumTrackNumber;
+        const headers = { "Accept": "application/json" };
+        const response = await fetch(resource, { method: "GET", headers: headers, credentials: "include" });
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status + " " + response.statusText);
+        }
+
+        const tracks = await response.json();
+        return tracks; 
     }
 
     async #invokeSaveTrack(albumIdentity, track) {
