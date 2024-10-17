@@ -33,51 +33,17 @@ class EditorTabController extends TabController {
         const section = this.viewsSectionTemplate.content.firstElementChild.cloneNode(true);
         while (this.center.lastElementChild) this.center.lastElementChild.remove();
         this.center.append(section);
+        
+        const albums_list = await this.#invokeQueryAllAlbums(); // Await the result here
 
         try {
             // Await the promise to get the resolved array of albums
-            const albums_list = await this.#invokeQueryAllAlbums(); // Await the result here
 			
-        
 			for (const album of albums_list){
 				// console.log("album one is ", album);
-				const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
-
-                for (let albumTrack of album.trackReferences){
-				const singleTrack = await this.#invokeGetTrack(albumTrack); 
-                // console.log("Künstler Name ist: ",singleTrack.artist);
-
-                const accessButton = ServerEditorRowsection.querySelector("td.access>button");
-                const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
-
-                accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-				
-                const artist = ServerEditorRowsection.querySelector("td.artist.text");
-                artist.innerText = singleTrack.artist || "";
-
-				const title = ServerEditorRowsection.querySelector("td.title.text");
-                title.innerText = album.title || "";
-
-				const genre = ServerEditorRowsection.querySelector("td.genre.text");
-                genre.innerText = album.genre || "";
-
-                const year = ServerEditorRowsection.querySelector("td.release-year.number");
-                year.innerText= parseInt(album.releaseYear || "0");
-
-				const tracks = ServerEditorRowsection.querySelector("td.track-count.number");
-                tracks.innerText = `${parseInt(album.trackReferences[0]|| "0") + "/" + album.trackCount}`;
-                console.log(parseInt(album.trackReferences[0]),album.trackCount);
-                this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
-
-                accessButton.addEventListener("click", event => this.#invokeQueryAlbum(album));
-
-
-                }
-	
-
-				
-
+                this.#invokeQueryTracks(album);	
 			}
+
         } catch (error) {
             console.error("Error fetching albums:", error);
         }
@@ -151,8 +117,49 @@ class EditorTabController extends TabController {
         releaseYear.value = parseInt(album.releaseYear || "null");
 
         const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input");
-        trackCount.value = parseInt(album.trackCount|| "0");
+        trackCount.value = parseInt(album.trackCount || "0");
+
+        let tracks_list = this.#invokeQueryTracks(album);
     }
+
+
+    async #invokeQueryTracks(album){
+        console.log("newwwwwwwwww ALbum track",album);
+        for (let albumTrack of album.trackReferences){
+            const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
+
+            const singleTrack = await this.#invokeGetTrack(albumTrack); 
+            // console.log("Künstler Name ist: ",singleTrack.artist);
+
+            const accessButton = ServerEditorRowsection.querySelector("td.access>button");
+            const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
+
+            accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+            
+            const artist = ServerEditorRowsection.querySelector("td.artist.text");
+            artist.innerText = singleTrack.artist || "";
+
+            const title = ServerEditorRowsection.querySelector("td.title.text");
+            title.innerText = album.title || "";
+
+            const genre = ServerEditorRowsection.querySelector("td.genre.text");
+            genre.innerText = album.genre || "";
+
+            const year = ServerEditorRowsection.querySelector("td.release-year.number");
+            year.innerText= parseInt(album.releaseYear || "0");
+
+            const tracks = ServerEditorRowsection.querySelector("td.track-count.number");
+            tracks.innerText = `${parseInt(album.trackReferences[0]|| "0") + "/" + album.trackCount}`;
+            console.log(parseInt(album.trackReferences[0]),album.trackCount);
+            this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
+
+            accessButton.addEventListener("click", event => this.#invokeQueryAlbum(album));
+
+
+            }
+
+
+    };
 
 
     async #invokeSaveAlbum() {
@@ -171,7 +178,7 @@ class EditorTabController extends TabController {
 
                     // Call the function to create or update the album
                     const result = await this.#invokeCreateOrUpdateAlbum(this.#album);
-                    console.log(result);
+                    // console.log(result);
                     resolve(result);     
                 } catch (error) {
                     console.error("Error updating the album:", error);
@@ -180,6 +187,7 @@ class EditorTabController extends TabController {
             }, { once: true });  // Ensure the event listener is executed only once
         });
     }
+
 
     async #invokeCreateOrUpdateTrack(albumIdentity) {
         this.serverAlbumEditorSectionTable.innerHTML = ""; 
@@ -201,11 +209,11 @@ class EditorTabController extends TabController {
     
                 // Prepare track data
                 this.#track = { ordinal, artist, title, genre };
-                console.log("Track Data:", this.#track);
+                // console.log("Track Data:", this.#track);
     
                 // Save track to the server
                 const resultTrack = await this.#invokeSaveTrack(albumIdentity, this.#track);
-                console.log("Saved Track:", resultTrack);
+                // console.log("Saved Track:", resultTrack);
     
                 // Optionally clear input fields after saving if needed
                 trackTemplate.querySelector("td.ordinal>input").value = "";
@@ -217,6 +225,7 @@ class EditorTabController extends TabController {
             }
         });
     }
+
 
     async #invokeGetTrack(albumTrackNumber){
         const resource = this.sharedProperties["service-origin"] + "/services/tracks/"  +  albumTrackNumber;
@@ -230,6 +239,7 @@ class EditorTabController extends TabController {
         const tracks = await response.json();
         return tracks; 
     }
+
 
     async #invokeSaveTrack(albumIdentity, track) {
         const resource = this.sharedProperties["service-origin"] + "/services/albums/" + albumIdentity + "/tracks";
