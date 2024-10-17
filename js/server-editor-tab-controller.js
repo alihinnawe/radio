@@ -52,8 +52,6 @@ class EditorTabController extends TabController {
 
                 accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
 				
-                accessButton.addEventListener("click", event => console.log("test"));
-
                 const artist = ServerEditorRowsection.querySelector("td.artist.text");
                 artist.innerText = singleTrack.artist || "";
 
@@ -70,6 +68,10 @@ class EditorTabController extends TabController {
                 tracks.innerText = `${parseInt(album.trackReferences[0]|| "0") + "/" + album.trackCount}`;
                 console.log(parseInt(album.trackReferences[0]),album.trackCount);
                 this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
+
+                accessButton.addEventListener("click", event => this.#invokeQueryAlbum(album));
+
+
                 }
 	
 
@@ -125,6 +127,33 @@ class EditorTabController extends TabController {
         const albums = await response.json();
         return albums; 
     }
+
+    async #invokeQueryAlbum(album) {
+        this.viewsSectionSection.classList.add("hidden");
+        const albumTemplate = this.editorSectionTemplate.content.firstElementChild.cloneNode(true);
+        this.center.append(albumTemplate);
+
+        const accessSaveButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
+        // const accessDeleteButton = this.serverAlbumEditorSection.querySelector("div.control>button.delete");
+        // const accessButton = this.serverAlbumEditorSection.querySelector("div.control>button.cancel"); 
+        accessSaveButton.addEventListener("click",event => this.#invokeSaveAlbum())
+
+        const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
+        accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+        console.log("accessButtonImage.srcaccessButtonImage.src",accessButtonImage.src);
+
+
+        // Get the updated values of the inputs when the save button is clicked
+        const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input");
+        title.value = album.title.trim() || "";
+
+        const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input");
+        releaseYear.value = parseInt(album.releaseYear || "null");
+
+        const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input");
+        trackCount.value = parseInt(album.trackCount|| "0");
+    }
+
 
     async #invokeSaveAlbum() {
         // Add event listener for the save button
