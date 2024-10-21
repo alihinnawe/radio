@@ -34,15 +34,16 @@ class EditorTabController extends TabController {
         const section = this.viewsSectionTemplate.content.firstElementChild.cloneNode(true);
         while (this.center.lastElementChild) this.center.lastElementChild.remove();
         this.center.append(section);
-        
-        const albums_list = await this.#invokeQueryAllAlbums(); // invoke all albums
-
-        try {
+        try {     
+            const albums_list = await this.#invokeQueryAllAlbums(); // invoke all albums
+            console.log("query all albums", albums_list);
+     
             // Await the promise to get the resolved array of albums
-			
+			// to do only on add event listener we call the tracks.
 			for (const album of albums_list){
 				// console.log("album one is ", album);
-                this.#invokeQueryTracks(album);	
+
+                this.#invokeAlbum(album);	
 			}
 
         } catch (error) {
@@ -96,6 +97,8 @@ class EditorTabController extends TabController {
         return albums; 
     }
 
+
+    // it invokes the album header for editing
     async #invokeQueryAlbum(album) {
         this.viewsSectionSection.classList.add("hidden");
         const albumTemplate = this.editorSectionTemplate.content.firstElementChild.cloneNode(true);
@@ -121,19 +124,20 @@ class EditorTabController extends TabController {
         const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input");
         trackCount.value = parseInt(album.trackCount || "0");
 
-        // invoke tracks for each album
+        // invoke tracks for each album when clicking on it
         this.#invokeQuerySingleTrack(album);
         // console.log("track lists are: ",tracks_list);
     }
 
 
-    async #invokeQueryTracks(album){
+    async #invokeAlbum(album){
         // console.log("newwwwwwwwww ALbum track",album);
-        for (let albumTrackId of album.trackReferences){
+    
             const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
 
-            const singleTrack = await this.#invokeGetTrack(albumTrackId); 
-            // console.log("rack Object Name ist: ",singleTrack);
+            // get the artist for each
+            const singleTrack = await this.#invokeGetTrack(album.trackReferences[0]); 
+            console.log("Single track Object Name ist: ",singleTrack);
 
             const accessButton = ServerEditorRowsection.querySelector("td.access>button");
             const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
@@ -153,7 +157,7 @@ class EditorTabController extends TabController {
             year.innerText= parseInt(album.releaseYear || "0");
 
             const tracks = ServerEditorRowsection.querySelector("td.track-count.number");
-            tracks.innerText = `${parseInt(album.trackReferences[0]|| "0") + "/" + album.trackCount}`;
+            tracks.innerText = `${parseInt(album.trackReferences.length|| "0") + "/" + album.trackCount}`;
 
             // const trackSection = this.serverAlbumEditorSection.append();
             this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(ServerEditorRowsection);
@@ -161,7 +165,7 @@ class EditorTabController extends TabController {
             accessButton.addEventListener("click", event => this.#invokeQueryAlbum(album));
 
 
-            }
+            
 
 
     };
