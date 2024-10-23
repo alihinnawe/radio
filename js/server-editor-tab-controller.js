@@ -36,7 +36,7 @@ class EditorTabController extends TabController {
         this.center.append(section);
         try {     
             const albums_list = await this.#invokeQueryAllAlbums(); // invoke all albums
-            console.log("query all albums", albums_list);
+            // console.log("query all albums", albums_list);
      
             // Await the promise to get the resolved array of albums
 			// to do only on add event listener we call the tracks.
@@ -63,26 +63,38 @@ class EditorTabController extends TabController {
         this.center.append(tableRow);
 
         // Set cover image source
-        const imageCoverSource = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
-        const imageCoverAvatar = tableRow.querySelector("div.album>span.cover>button>img");
-        imageCoverAvatar.src = imageCoverSource;
+        // const imageCoverSource = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
+        // const imageCoverAvatar = tableRow.querySelector("div.album>span.cover>button>img");
+        // imageCoverAvatar.src = imageCoverSource;
 
         // Immediately save the album
-        const albumIdentity = await this.#invokeSaveAlbum();
+        // const albumIdentity = await this.#invokeSaveAlbum();
 
         // Now allow track creation
-        const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
-        buttonTrack.addEventListener("click", () => this.#invokeCreateOrUpdateTrack(albumIdentity));
+        // const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
+        // buttonTrack.addEventListener("click", () => this.#invokeCreateOrUpdateTrack(albumIdentity));
         // to dooooooooooooooooo
     }
     // only for save
     async #invokeCreateOrUpdateAlbum(album) {
+        console.log("Updating album:", JSON.stringify(album));
         const resource = this.sharedProperties["service-origin"] + "/services/albums";
         const headers = { "Content-Type": "application/json", "Accept": "text/plain" };
-        const response = await fetch(resource, { method: "POST", headers: headers, body: JSON.stringify(album), credentials: "include" });
-        if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+    
+        const response = await fetch(resource, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(album),
+            credentials: "include"
+        });
+    
+        if (!response.ok) {
+            const errorResponse = await response.text(); // Get additional error info
+            throw new Error(`HTTP ${response.status}: ${response.statusText}. Response: ${errorResponse}`);
+        }
+    
         return window.parseInt(await response.json());
-    }
+    }   
 
     async #invokeQueryAllAlbums() {
         const resource = this.sharedProperties["service-origin"] + "/services/albums";
@@ -107,7 +119,7 @@ class EditorTabController extends TabController {
         const accessSaveButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
         // const accessDeleteButton = this.serverAlbumEditorSection.querySelector("div.control>button.delete");
         // const accessButton = this.serverAlbumEditorSection.querySelector("div.control>button.cancel"); 
-        accessSaveButton.addEventListener("click",event => this.#invokeSaveAlbum())
+        accessSaveButton.addEventListener("click",event => this.#invokeSaveAlbum(album.identity));
 
         const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
         accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
@@ -137,7 +149,7 @@ class EditorTabController extends TabController {
 
             // get the artist for each
             const singleTrack = await this.#invokeGetTrack(album.trackReferences[0]); 
-            console.log("Single track Object Name ist: ",singleTrack);
+            // console.log("Single track Object Name ist: ",singleTrack);
 
             const accessButton = ServerEditorRowsection.querySelector("td.access>button");
             const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
@@ -274,31 +286,52 @@ class EditorTabController extends TabController {
         return window.parseInt(await response.json());
     }
 
-    async #invokeSaveAlbum() {
-        // Add event listener for the save button
-        const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
-        return new Promise((resolve, reject) => {
-            speichernButton.addEventListener("click", async event => {
-                try {
-                    // Get the updated values of the inputs when the save button is clicked
-                    const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input").value.trim();
-                    const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input").value.trim();
-                    const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input").value.trim();
-
-                    // Update the album object with the latest input values
-                    this.#album = { title, releaseYear, trackCount };
-
-                    // Call the function to create or update the album
-                    const result = await this.#invokeCreateOrUpdateAlbum(this.#album);
-                    // console.log(result);
-                    resolve(result);     
-                } catch (error) {
-                    console.error("Error updating the album:", error);
-                    reject(error);     
-                }
-            }, { once: true });  // Ensure the event listener is executed only once
-        });
+    async #getAlbumByIdentity(identity) {
+        const resource = `${this.sharedProperties["service-origin"]}/services/albums/${identity}`;
+        const response = await fetch(resource, { method: "GET", credentials: "include" });
+        if (!response.ok) {
+            throw new Error("Failed to fetch album: " + response.statusText);
+        }
+        return await response.json();
     }
+    
+    async #invokeSaveAlbum(identity) {
+        try {
+            // Fetch the current album data
+            const currentAlbum = await this.#getAlbumByIdentity(identity);
+    
+            // Ensure the identity and current version are valid
+            if (!currentAlbum || !currentAlbum.identity || currentAlbum.version === undefined) {
+                throw new Error("Album not found or invalid data.");
+            }
+    
+            // Increment the version
+    
+            // Get updated values from the input fields
+            const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input").value.trim();
+            const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input").value.trim();
+            const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input").value.trim();
+    
+            // Prepare the updated album object
+            const updatedAlbum = {
+                ...currentAlbum,
+                title,
+                releaseYear,
+                trackCount,
+            };
+    
+            // Call the function to create or update the album
+            const result = await this.#invokeCreateOrUpdateAlbum(updatedAlbum);
+            currentAlbum.version = (currentAlbum.version || 0) + 1;
+            console.log("Album updated successfully:", result);
+            return result;
+        } catch (error) {
+            console.error("Error updating the album:", error);
+            throw error; // Rethrow error for further handling if needed
+        }
+    }
+
+    
 
 }
 
