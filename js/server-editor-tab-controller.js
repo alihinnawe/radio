@@ -82,7 +82,11 @@ class EditorTabController extends TabController {
         const GetSavedAlbum = await this.#getAlbumByIdentity(albumIdentity);
         this.avatarAlbumViewer.addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
 		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(GetSavedAlbum, event.dataTransfer.files[0]));
+       
+       //delete album or return to albums
         this.editorCancel.addEventListener("click", event => this.processReturnToAlbums());
+        this.serverEditorDelete.addEventListener("click", event => this.procesRemoveAlbum(album));
+
 
         // Now allow track creation
         const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
@@ -141,8 +145,9 @@ class EditorTabController extends TabController {
 		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(album, event.dataTransfer.files[0]));
         const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
         accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-        
+
         this.editorCancel.addEventListener("click", event => this.processReturnToAlbums());
+        this.editorDelete.addEventListener("click", event => this.procesRemoveAlbum(album));
 
         // Get the updated values of the inputs when the save button is clicked
         const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input");
@@ -459,6 +464,40 @@ class EditorTabController extends TabController {
 			console.error(error);
 		}
 	}
+    async #invokeDeleteTrack (album, track) {
+		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + album.identity + "/tracks/" + track.identity;
+		const headers = { "Accept": "text/plain" };
+		
+		const response = await fetch(resource, { method: "DELETE", headers: headers, credentials: "include" });
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+	
+		return window.parseInt(await response.text());	
+	}
+
+    async #invokeRemoveAlbum (album) {
+		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + album.identity;
+		const headers = { "Accept": "text/plain" };
+
+		const response = await fetch(resource, { method: "DELETE", headers: headers, credentials: "include" });
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+	
+		return window.parseInt(await response.text());	
+	}
+
+    async procesRemoveAlbum (album) {
+		try {	
+			 
+                
+            await this.#invokeRemoveAlbum(album);
+            this.processReturnToAlbums();
+
+			this.messageOutput.value = "ok";
+		} catch (error) {
+			this.messageOutput.value = error.message;
+			console.error(error);
+		}
+	}
+
 
 }
 
