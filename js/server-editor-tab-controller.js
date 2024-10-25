@@ -31,6 +31,8 @@ class EditorTabController extends TabController {
 	get avatarAlbumViewer () { return this.avatarAlbumButton.querySelector("div.album>span.cover>button>img"); }
 	get avatarAlbumChooser () { return this.serverAlbumEditorSection.querySelector("div.album>span.cover>input"); }
     
+    get editorDelete () { return this.serverAlbumEditorSection.querySelector("div.control>button.delete"); }
+	get editorCancel () { return this.serverAlbumEditorSection.querySelector("div.control>button.cancel"); }
     /**
      * Handles that activity has changed from false to true.
      */
@@ -80,7 +82,8 @@ class EditorTabController extends TabController {
         const GetSavedAlbum = await this.#getAlbumByIdentity(albumIdentity);
         this.avatarAlbumViewer.addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
 		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(GetSavedAlbum, event.dataTransfer.files[0]));
-        
+        this.editorCancel.addEventListener("click", event => this.processReturnToAlbums());
+
         // Now allow track creation
         const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
         buttonTrack.addEventListener("click", () => this.#invokeCreateOrUpdateTrack(albumIdentity));
@@ -138,6 +141,8 @@ class EditorTabController extends TabController {
 		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(album, event.dataTransfer.files[0]));
         const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
         accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+        
+        this.editorCancel.addEventListener("click", event => this.processReturnToAlbums());
 
         // Get the updated values of the inputs when the save button is clicked
         const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input");
@@ -439,6 +444,20 @@ class EditorTabController extends TabController {
 		const response = await fetch(resource, { method: "POST" , headers: headers, body: file, credentials: "include" });
 		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
 		return window.parseInt(await response.text());
+	}
+
+    async processReturnToAlbums () {
+		try {
+
+            console.log("is cancelling");
+			this.serverAlbumEditorSection.remove();
+			this.viewsSectionSection.classList.remove("hidden");
+			
+			this.messageOutput.value = "ok";
+		} catch (error) {
+			this.messageOutput.value = error.message;
+			console.error(error);
+		}
 	}
 
 }
