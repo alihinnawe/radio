@@ -6,13 +6,13 @@ import TabController from "../../../tool/tab-controller.js";
 class EditorTabController extends TabController {
     #album;
     #track;
-
     /**
      * Initializes a new instance.
      */
     constructor() {
         super("server-editor");
-
+        this.#album = null;
+        this.#track = null;
         // register controller event listeners 
         this.addEventListener("activated", event => this.processActivated());
     }
@@ -27,6 +27,10 @@ class EditorTabController extends TabController {
     get editorTrackSection() { return document.querySelector("head>template.server-album-editor-row"); }
     get serverAlbumEditorSectionTable() { return this.center.querySelector("section.server-album-editor>div.tracks>div.data>table>tbody"); }
 
+    get avatarAlbumButton () { return this.serverAlbumEditorSection.querySelector("div.album>span.cover>button"); }
+	get avatarAlbumViewer () { return this.avatarAlbumButton.querySelector("div.album>span.cover>button>img"); }
+	get avatarAlbumChooser () { return this.serverAlbumEditorSection.querySelector("div.album>span.cover>input"); }
+    
     /**
      * Handles that activity has changed from false to true.
      */
@@ -46,7 +50,6 @@ class EditorTabController extends TabController {
 			// to do only on add event listener we call the tracks.
 			for (const album of albums_list){
 				// console.log("album one is ", album);
-
                 this.#invokeAlbum(album);	
 			}
 
@@ -57,7 +60,7 @@ class EditorTabController extends TabController {
         this.viewsSectionSection.querySelector("div.control>button.create").addEventListener("click", event => this.processDisplayAlbumEditor());
     }
 
-    // only for save
+
     async processDisplayAlbumEditor() {
         const sessionOwner = this.sharedProperties["session-owner"];
         this.viewsSectionSection.classList.add("hidden");
@@ -66,19 +69,24 @@ class EditorTabController extends TabController {
         const tableRow = this.editorSectionTemplate.content.firstElementChild.cloneNode(true);
         this.center.append(tableRow);
 
+        
         // Set cover image source
         const imageCoverSource = this.sharedProperties["service-origin"] + "/services/documents/" + sessionOwner.avatar.identity;
         const imageCoverAvatar = tableRow.querySelector("div.album>span.cover>button>img");
         imageCoverAvatar.src = imageCoverSource;
 
-        // const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
-        // speichernButton.addEventListener("click", event => this.#invokeSaveAlbum());
-
+		// save album into database
         const albumIdentity = await this.#invokeSaveAlbum();
+        const GetSavedAlbum = await this.#getAlbumByIdentity(albumIdentity);
+        this.avatarAlbumViewer.addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
+		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(GetSavedAlbum, event.dataTransfer.files[0]));
+        
         // Now allow track creation
         const buttonTrack = this.serverAlbumEditorSection.querySelector("div.tracks>div.control>button.create");
         buttonTrack.addEventListener("click", () => this.#invokeCreateOrUpdateTrack(albumIdentity));
     }
+
+
     // only for save
     async #invokeCreateOrUpdateAlbum(album) {
         console.log("Updating album:", JSON.stringify(album));
@@ -99,6 +107,7 @@ class EditorTabController extends TabController {
     
         return window.parseInt(await response.json());
     }   
+
 
     async #invokeQueryAllAlbums() {
         const resource = this.sharedProperties["service-origin"] + "/services/albums";
@@ -121,9 +130,11 @@ class EditorTabController extends TabController {
         this.center.append(albumTemplate);
 
         const accessSaveButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
-        // const accessDeleteButton = this.serverAlbumEditorSection.querySelector("div.control>button.delete");
-        // const accessButton = this.serverAlbumEditorSection.querySelector("div.control>button.cancel"); 
+        this.viewsSectionSection.querySelector("div.albums>div>table>tbody").append(this.ServerEditorRowsection);
+
         accessSaveButton.addEventListener("click",event => this.#invokeUpdateAlbum(album.identity));
+
+        this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img").addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
 
         const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
         accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
@@ -145,12 +156,12 @@ class EditorTabController extends TabController {
         // console.log("track lists are: ",tracks_list);
     }
 
-
+    // invoke each album row in the albums table
     async #invokeAlbum(album){
         // console.log("newwwwwwwwww ALbum track",album);
     
             const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
-
+            console.log("ServerEditorRowsectionServerEditorRowsectionServerEditorRowsection",ServerEditorRowsection);
             // get the artist for each
             // const singleTrack = await this.#invokeGetTrack(album.trackReferences[0]); 
             // console.log("Single track Object Name ist: ",singleTrack);
@@ -159,17 +170,17 @@ class EditorTabController extends TabController {
             const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
 
             accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-            
+            console.log("accessButtonImage.srcaccessButtonImage.src",accessButtonImage.src);
             const artist = ServerEditorRowsection.querySelector("td.artist.text");
-            // artist.innerText = singleTrack.artist || "vvv";
+            artist.innerText = album.artist || "various artist";
 
-            artist.innerText =  "vvv";
+            // artist.innerText =  "vio";
 
             const title = ServerEditorRowsection.querySelector("td.title.text");
             title.innerText = album.title || "";
 
             const genre = ServerEditorRowsection.querySelector("td.genre.text");
-            genre.innerText = album.genre || "";
+            genre.innerText = album.genre || "various genre";
 
             const year = ServerEditorRowsection.querySelector("td.release-year.number");
             year.innerText= parseInt(album.releaseYear || "0");
@@ -188,44 +199,50 @@ class EditorTabController extends TabController {
 
     };
 
-    async #invokeQuerySingleTrack(album){
-        // console.log("newwwwwwwwww ALbum track",album.trackReferences);
-
-        for (let trackIdReference of album.trackReferences){
-
-            const ServerEditorTrackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
-
-            // console.log("albumTrackIdalbumTrackIdalbumTrackId",albumTrackId);
-            const singleTrack = await this.#invokeGetTrack(trackIdReference); 
-
-            const ordinal = ServerEditorTrackTemplate.querySelector("tr>td.ordinal>input");
-            ordinal.value = singleTrack.ordinal || "ccc";
-
-            const artist = ServerEditorTrackTemplate.querySelector("tr>td.artist>input");
-            artist.value = singleTrack.artist || "ccc";
-
-            const title = ServerEditorTrackTemplate.querySelector("tr>td.title>input");
-            title.value = singleTrack.title || "ccc";
-
-            const genre = ServerEditorTrackTemplate.querySelector("tr>td.genre>input");
-            genre.value = singleTrack.genre || "ccc";
-
-            const serverAlbumEditorTableNew = this.serverAlbumEditorSection.querySelector("div.tracks>div.data>table>tbody");
-            serverAlbumEditorTableNew.append(ServerEditorTrackTemplate);          
-
-            const accessTrackNewButton = this.serverAlbumEditorSectionTable.querySelector("tr>td.action>button.submit");
-            accessTrackNewButton.addEventListener("click", event => this.#invokeUpdateTrack(album.identity,trackIdReference));
-                
-
-            }
-
-
-    };
 
 // only for saving new track directly after creating new album
  
+    async #invokeQuerySingleTrack(album) {
+        // Fetch or call each track reference number in the album 
+        for (let trackIdReference of album.trackReferences) {
+            const ServerEditorTrackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
+            const singleTrack = await this.#invokeGetTrack(trackIdReference); 
+            
+            const ordinal = ServerEditorTrackTemplate.querySelector("tr>td.ordinal>input");
+            ordinal.value = singleTrack.ordinal || null;
+            
+            const artist = ServerEditorTrackTemplate.querySelector("tr>td.artist>input");
+            artist.value = singleTrack.artist || "";
+            
+            const title = ServerEditorTrackTemplate.querySelector("tr>td.title>input");
+            title.value = singleTrack.title || "";
+            
+            const genre = ServerEditorTrackTemplate.querySelector("tr>td.genre>input");
+            genre.value = singleTrack.genre || "";
+
+            const serverAlbumEditorTableNew = this.serverAlbumEditorSection.querySelector("div.tracks>div.data>table>tbody");
+            serverAlbumEditorTableNew.append(ServerEditorTrackTemplate); 
+
+            const accessTrackNewButton = ServerEditorTrackTemplate.querySelector("tr>td.action>button.submit");
+            accessTrackNewButton.addEventListener("click", async event => {
+
+                const updatedTrackData = {
+                    trackId: trackIdReference, 
+                    ordinal: ordinal.value, 
+                    artist: artist.value, 
+                    title: title.value, 
+                    genre: genre.value 
+                };
+
+                await this.#invokeUpdateTrack(album.identity, updatedTrackData); 
+            });        
+        }
+    }
+
+
     async #invokeCreateOrUpdateTrack(albumIdentity) {
         this.serverAlbumEditorSectionTable.innerHTML = ""; 
+
         // Clone the track template for a new track
         const trackTemplate = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
         this.serverAlbumEditorSectionTable.append(trackTemplate); // Add the new track row to the table
@@ -248,10 +265,10 @@ class EditorTabController extends TabController {
     
                 // Save track to the server
                 const resultTrack = await this.#invokeSaveTrack(albumIdentity, this.#track);
-                // console.log("Saved Track:", resultTrack);
+                console.log("Saved Track final:", resultTrack);
                 
                 // Optionally clear input fields after saving if needed
-                trackTemplate.querySelector("td.ordinal>input").value = "";
+                trackTemplate.querySelector("td.ordinal>input").value = 1;
                 trackTemplate.querySelector("td.artist>input").value = "";
                 trackTemplate.querySelector("td.title>input").value = "";
                 trackTemplate.querySelector("td.genre>input").value = "";
@@ -262,51 +279,39 @@ class EditorTabController extends TabController {
         });
     }
 
-    async #invokeUpdateTrack(albumIdentity, trackIdentity) {
-        // Clone the track template for a new track
 
-
+    async #invokeUpdateTrack(albumIdentity, updatedTrack) {
+            console.log("trackIdentitytrackIdentitytrackIdentity",updatedTrack.trackId);
             try {
 
                 // Fetch the current album data
-                const currentTrack = await this.#getTrackByIdentity(trackIdentity);
+                const currentTrack = await this.#invokeGetTrack(updatedTrack.trackId);
                 console.log("current track",currentTrack);
-                // Ensure the identity and current version are valid
+                
                 if (!currentTrack || !currentTrack.identity || currentTrack.version === undefined) {
                 throw new Error("Album not found or invalid data.");
                 }
-                // Get values from the current track row's input fields
-                const ordinal = window.parseInt(this.serverAlbumEditorSectionTable.querySelector("tr>td.ordinal>input").value || "0");
-                const artist = this.serverAlbumEditorSectionTable.querySelector("tr>td.artist>input").value || "";
-                const title = this.serverAlbumEditorSectionTable.querySelector("tr>td.title>input").value || "";
-                const genre = this.serverAlbumEditorSectionTable.querySelector("tr>td.genre>input").value || "";
-    
-                          // Prepare the updated album object
-                const updatedTrack = {
+            
+                // this is the the updated album object
+                const updatedTrackFinal = {
                     ...currentTrack,
-                    ordinal,
-                    artist,
-                    title,
-                    genre
-                };
-                console.log("updated tarck: ", updatedTrack)
-                // Save track to the server
-                const resultTrack = await this.#invokeSaveUpdatedTrack(albumIdentity,updatedTrack);
-                // console.log("Saved Track:", resultTrack);
-                console.log("Track updated successfully:", resultTrack);
-                currentTrack.version = (currentTrack.version || 0) + 1;
-             
+                    ordinal: updatedTrack.ordinal,
+                    artist: updatedTrack.artist,
+                    title: updatedTrack.title,
+                    genre: updatedTrack.genre };
 
-                // Optionally clear input fields after saving if needed
-                // trackTemplate.querySelector("td.ordinal>input").value = "";
-                // trackTemplate.querySelector("td.artist>input").value = "";
-                // trackTemplate.querySelector("td.title>input").value = "";
-                // trackTemplate.querySelector("td.genre>input").value = "";
+                console.log("updated tarck: ", updatedTrackFinal)
+                
+                // Save track to the server
+                const resultTrack = await this.#invokeSaveUpdatedTrack(albumIdentity,updatedTrackFinal);
+                currentTrack.version = (currentTrack.version || 0) + 1;
+                
             } catch (error) {
                 console.error("Error saving track:", error);
             }
 
     }
+
 
     async #invokeGetTrack(trackNumber){
         const resource = this.sharedProperties["service-origin"] + "/services/tracks/"  +  trackNumber;
@@ -316,9 +321,7 @@ class EditorTabController extends TabController {
         if (!response.ok) {
             throw new Error("HTTP " + response.status + " " + response.statusText);
         }
-
-        const tracks = await response.json();
-        return tracks; 
+        return await response.json();
     }
 
 
@@ -330,24 +333,18 @@ class EditorTabController extends TabController {
         return window.parseInt(await response.json());
     }
 
-    async #invokeSaveUpdatedTrack(albumIdentity,trackdentityUpdated) {
+
+    async #invokeSaveUpdatedTrack(albumIdentity,trackIdentityUpdated) {
+        console.log("track identity updated", trackIdentityUpdated);
         const resource = this.sharedProperties["service-origin"] + "/services/albums/" + albumIdentity + "/tracks" ;
+        console.log("resource",resource);
         const headers = { "Content-Type": "application/json", "Accept": "text/plain" };
-        const response = await fetch(resource, { method: "POST", headers: headers, body: JSON.stringify(trackdentityUpdated), credentials: "include" });
+        const response = await fetch(resource, { method: "POST", headers: headers, body: JSON.stringify(trackIdentityUpdated), credentials: "include" });
+        console.log("track respones is",response);
         if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
         return window.parseInt(await response.json());
     }
 
-
-    async #getTrackByIdentity(identity) {
-        const resource = `${this.sharedProperties["service-origin"]}/services/tracks/${identity}`;
-        const response = await fetch(resource, { method: "GET", credentials: "include" });
-        if (!response.ok) {
-            throw new Error("Failed to fetch track: " + response.statusText);
-        }
-        return await response.json();
-    }
-    
 
     async #getAlbumByIdentity(identity) {
         const resource = `${this.sharedProperties["service-origin"]}/services/albums/${identity}`;
@@ -362,6 +359,7 @@ class EditorTabController extends TabController {
     async #invokeSaveAlbum() {
         // Add event listener for the save button
         const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
+
         return new Promise((resolve, reject) => {
             speichernButton.addEventListener("click", async event => {
                 try {
@@ -390,7 +388,7 @@ class EditorTabController extends TabController {
         try {
             // Fetch the current album data
             const currentAlbum = await this.#getAlbumByIdentity(identity);
-    
+            
             // Ensure the identity and current version are valid
             if (!currentAlbum || !currentAlbum.identity || currentAlbum.version === undefined) {
                 throw new Error("Album not found or invalid data.");
@@ -402,7 +400,7 @@ class EditorTabController extends TabController {
             const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input").value.trim();
             const releaseYear = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.release-year>input").value.trim();
             const trackCount = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.track-count>input").value.trim();
-    
+
             // Prepare the updated album object
             const updatedAlbum = {
                 ...currentAlbum,
@@ -410,7 +408,7 @@ class EditorTabController extends TabController {
                 releaseYear,
                 trackCount,
             };
-    
+
             // Call the function to create or update the album
             const result = await this.#invokeCreateOrUpdateAlbum(updatedAlbum);
             currentAlbum.version = (currentAlbum.version || 0) + 1;
@@ -422,7 +420,35 @@ class EditorTabController extends TabController {
         }
     }
 
+
+    async validateAvatarTransfer (dataTransfer) {
+		const primaryItem = dataTransfer.items[0];
+		dataTransfer.dropEffect = primaryItem.kind === "file" && primaryItem.type && primaryItem.type.startsWith("image/") ? "copy" : "none";
+	}
+
+	async processSubmitAlbumAvatar (album, avatarFile) {
+		try {
+			album.cover.identity = await this.#invokeInsertOrUpdateDocument(avatarFile);
+            album.cover.description = avatarFile.name;
+            const result = await this.#invokeCreateOrUpdateAlbum(album);
+			this.avatarAlbumViewer.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
+
+			this.messageOutput.value = "ok.";
+		} catch (error) {
+			this.messageOutput.value = error.message || error.toString();
+			console.error(error);
+		}
+	}
+   
     
+	async #invokeInsertOrUpdateDocument (file) {
+		const headers = { "Accept": "text/plain", "Content-Type": file.type, "X-Content-Description": file.name };
+		const resource = this.sharedProperties["service-origin"] + "/services/documents";
+
+		const response = await fetch(resource, { method: "POST" , headers: headers, body: file, credentials: "include" });
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+		return window.parseInt(await response.text());
+	}
 
 }
 
