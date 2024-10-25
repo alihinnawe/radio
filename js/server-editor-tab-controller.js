@@ -134,12 +134,10 @@ class EditorTabController extends TabController {
 
         accessSaveButton.addEventListener("click",event => this.#invokeUpdateAlbum(album.identity));
 
-        this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img").addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
-
+        this.avatarAlbumViewer.addEventListener("dragover", event => this.validateAvatarTransfer(event.dataTransfer));
+		this.avatarAlbumViewer.addEventListener("drop", event => this.processSubmitAlbumAvatar(album, event.dataTransfer.files[0]));
         const accessButtonImage = this.serverAlbumEditorSection.querySelector("div.album>span.cover>button>img");
         accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
-        // console.log("accessButtonImage.srcaccessButtonImage.src",accessButtonImage.src);
-
 
         // Get the updated values of the inputs when the save button is clicked
         const title = this.serverAlbumEditorSection.querySelector("div.album>span.other>div.title>input");
@@ -161,20 +159,13 @@ class EditorTabController extends TabController {
         // console.log("newwwwwwwwww ALbum track",album);
     
             const ServerEditorRowsection = this.viewsServerEditorRowTemplate.content.firstElementChild.cloneNode(true);
-            console.log("ServerEditorRowsectionServerEditorRowsectionServerEditorRowsection",ServerEditorRowsection);
-            // get the artist for each
-            // const singleTrack = await this.#invokeGetTrack(album.trackReferences[0]); 
-            // console.log("Single track Object Name ist: ",singleTrack);
-
             const accessButton = ServerEditorRowsection.querySelector("td.access>button");
             const accessButtonImage = ServerEditorRowsection.querySelector("td.access>button>img");
-
             accessButtonImage.src = this.sharedProperties["service-origin"] + "/services/documents/" + album.cover.identity;
             console.log("accessButtonImage.srcaccessButtonImage.src",accessButtonImage.src);
+
             const artist = ServerEditorRowsection.querySelector("td.artist.text");
             artist.innerText = album.artist || "various artist";
-
-            // artist.innerText =  "vio";
 
             const title = ServerEditorRowsection.querySelector("td.title.text");
             title.innerText = album.title || "";
@@ -355,7 +346,7 @@ class EditorTabController extends TabController {
         return await response.json();
     }
 
-
+    // save only new album 
     async #invokeSaveAlbum() {
         // Add event listener for the save button
         const speichernButton = this.serverAlbumEditorSection.querySelector("div.control>button.submit");
