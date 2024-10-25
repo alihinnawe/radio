@@ -85,7 +85,7 @@ class EditorTabController extends TabController {
        
        //delete album or return to albums
         this.editorCancel.addEventListener("click", event => this.processReturnToAlbums());
-        this.serverEditorDelete.addEventListener("click", event => this.procesRemoveAlbum(album));
+        this.editorDelete.addEventListener("click", event => this.procesRemoveAlbum(GetSavedAlbum));
 
 
         // Now allow track creation
@@ -225,6 +225,8 @@ class EditorTabController extends TabController {
             serverAlbumEditorTableNew.append(ServerEditorTrackTemplate); 
 
             const accessTrackNewButton = ServerEditorTrackTemplate.querySelector("tr>td.action>button.submit");
+            ServerEditorTrackTemplate.querySelector("td.action>button.remove").addEventListener("click",event => this.processDeleteTrack(ServerEditorTrackTemplate, album, trackIdReference));
+        
             accessTrackNewButton.addEventListener("click", async event => {
 
                 const updatedTrackData = {
@@ -464,8 +466,8 @@ class EditorTabController extends TabController {
 			console.error(error);
 		}
 	}
-    async #invokeDeleteTrack (album, track) {
-		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + album.identity + "/tracks/" + track.identity;
+    async #invokeDeleteTrack (album, trackId) {
+		const resource = this.sharedProperties["service-origin"] + "/services/albums/" + album.identity + "/tracks/" + trackId;
 		const headers = { "Accept": "text/plain" };
 		
 		const response = await fetch(resource, { method: "DELETE", headers: headers, credentials: "include" });
@@ -498,7 +500,17 @@ class EditorTabController extends TabController {
 		}
 	}
 
-
+	async  processDeleteTrack (trackRow, album, trackId) {
+		try {
+			await this.#invokeDeleteTrack(album, trackId);
+			trackRow.remove();
+				
+			this.messageOutput.value = "ok";	
+		} catch (error) {
+			this.messageOutput.value = error.message;
+			console.error(error);	
+		}   
+	}
 }
 
 /*
