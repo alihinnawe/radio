@@ -371,7 +371,6 @@ class EditorTabController extends TabController {
 
             // Prepare the updated track data
             if (singleTrack) {
-                // track.recording = {...track.recording,description: track.recording.description};
                 // console.log("final track.recording is: ",track.recording);
                 try {
                     track = {...singleTrack,ordinal: track.ordinal, title:track.title, artist: track.artist, genre: track.genre,version: singleTrack.version };
@@ -765,23 +764,13 @@ class EditorTabController extends TabController {
                 track.title = tableRow.querySelector("td.title>input").value.trim() || null;
                 track.artist = tableRow.querySelector("td.artist>input").value.trim() || null;
                 track.genre = tableRow.querySelector("td.genre>input").value.trim() || null;
-                track.recording.description = tableRow.querySelector("td.recording>button").innerText || "";
-
-                // console.log("trackkkkk",track);
-                // Save track to the server
-                // track = {ordinal: track.ordinal, title:track.title, artist: track.artist, genre: track.genre };
+                track.recording.description = tableRow.querySelector("td.recording>button").innerText || ""
 
                 const track_number = await this.#invokeSaveTrack(album, track);
                 console.log("track_number",track_number);
                 if (!album.trackReferences) album.trackReferences = [];
                 album.trackReferences.push(track_number);
                 this.#processQuerySingleTrack(album,track);
-
-           
-                // if (track_number) await this.#invokeSaveUpdatedTrack(album,track_number);
-                // const track_created = await this.#invokeGetTrack(track_number);
-                // console.log("track_createdtrack_createdtrack_created",track_created);
-                // track_created.version = (track_created.version || 0) + 1;
 
               
             } catch (error) {
