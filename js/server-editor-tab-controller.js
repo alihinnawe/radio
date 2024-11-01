@@ -84,7 +84,7 @@ class EditorTabController extends TabController {
     try {
       // Immediately save the album
       const albums_list = await this.#invokeQueryAllAlbums(); // invoke all albums
-      console.log("query all albums", albums_list);
+      // console.log("query all albums", albums_list);
 
       // Await the promise to get the resolved array of albums
       // to do only on add event listener we call the tracks.
@@ -143,7 +143,7 @@ class EditorTabController extends TabController {
       "div.tracks>div.control>button.create"
     );
     let track;
-    console.log("album has been created successfully", GetSavedAlbum.identity);
+    // console.log("album has been created successfully", GetSavedAlbum.identity);
     buttonTrack.addEventListener("click", () =>
       this.#invokeCreateOrUpdateTrack(GetSavedAlbum.identity, (track = {}))
     );
@@ -151,7 +151,7 @@ class EditorTabController extends TabController {
 
   // only for save
   async #invokeCreateOrUpdateAlbum(album) {
-    console.log("Updating album:", JSON.stringify(album));
+    // console.log("Updating album:", JSON.stringify(album));
     const resource =
       this.sharedProperties["service-origin"] + "/services/albums";
     const headers = {
@@ -177,7 +177,7 @@ class EditorTabController extends TabController {
   }
 
   async #invokeQueryAllAlbums() {
-    console.log("3333");
+    // console.log("3333");
     const resource =
       this.sharedProperties["service-origin"] + "/services/albums";
     const headers = { Accept: "application/json" };
@@ -252,12 +252,12 @@ class EditorTabController extends TabController {
     trackCount.value = parseInt(album.trackCount || "0");
 
     // invoke tracks for each album when clicking on the album
-    this.#processQuerySingleTrack(album,this.#track = {});
+    await this.#processQuerySingleTrack(album,this.#track = {});
     const buttonTrackUpdate = this.serverAlbumEditorSection.querySelector(
       "div.tracks>div.control>button.create"
     );
     buttonTrackUpdate.addEventListener("click", (event) => {
-      console.log("clicked success");
+      // console.log("clicked success");
       this.#invokeCreateOrUpdateTrack(album, (this.#track = {})
     );
     });
@@ -281,10 +281,10 @@ class EditorTabController extends TabController {
       this.sharedProperties["service-origin"] +
       "/services/documents/" +
       album.cover.identity;
-    console.log(
-      "accessButtonImage.srcaccessButtonImage.src",
-      accessButtonImage.src
-    );
+    // console.log(
+    //   "accessButtonImage.srcaccessButtonImage.src",
+    //   accessButtonImage.src
+    // );
 
     const artist = ServerEditorRowsection.querySelector("td.artist.text");
     artist.innerText = album.artist || "various artist";
@@ -324,9 +324,9 @@ class EditorTabController extends TabController {
 
     // Fetch or call each track reference number in the album
     for (let trackIdReference of album.trackReferences) {
+        console.log("trackrefiddddddddddddd",trackIdReference);
         const serverEditorTrackRow = this.editorTrackTemplate.content.firstElementChild.cloneNode(true);
         const singleTrack = await this.#invokeGetTrack(trackIdReference);
-        console.log("single track fetched:", singleTrack);
 
         // Set values for the specific track row
         serverEditorTrackRow.querySelector("tr>td.ordinal>input").value = singleTrack.ordinal || null;
@@ -355,14 +355,14 @@ class EditorTabController extends TabController {
             .querySelector("td.recording>input")
             .addEventListener("change", (event) => this.processSelectTrackRecordUpdate(serverEditorTrackRow, singleTrack, event.target.files[0]));
 
-        console.log("Track successfully selected");
+        // console.log("Track successfully selected");
 
         // Event listener for submitting the track update
         if (!track.recording) track.recording = {};
         const accessTrackNewButton = serverEditorTrackRow.querySelector("td.action>button.submit");
         accessTrackNewButton.addEventListener("click", async () => {
             // Get values from the current track row's input fields
-            console.log("track before update is:",track);
+            // console.log("track before update is:",track);
             track.ordinal = window.parseInt(serverEditorTrackRow.querySelector("td.ordinal>input").value.trim() || "1");
             track.title = serverEditorTrackRow.querySelector("td.title>input").value.trim() || null;
             track.artist = serverEditorTrackRow.querySelector("td.artist>input").value.trim() || null;
@@ -376,7 +376,7 @@ class EditorTabController extends TabController {
                 try {
                     track = {...singleTrack,ordinal: track.ordinal, title:track.title, artist: track.artist, genre: track.genre,version: singleTrack.version };
                     
-                    console.log("final track after update", track);
+                    // console.log("final track after update", track);
                     await this.#processUpdateTrack(album, track,singleTrack);
                 } catch (error) {
                     console.error("Error saving track:", error);
@@ -389,8 +389,8 @@ class EditorTabController extends TabController {
 
 
   async #invokeCreateOrUpdateTrack(album, track) {
-        console.log("identityyyyyyyyyy", album.identity);
-        console.log("in 1");
+        // console.log("identityyyyyyyyyy", album.identity);
+        // console.log("in 1");
         // this.serverAlbumEditorSectionTable.innerHTML = "";
 
         // Clone the track template for a new track
@@ -402,7 +402,7 @@ class EditorTabController extends TabController {
         trackTemplate
         .querySelector("td.recording>button")
         .addEventListener("click", (event) => {
-            console.log("in 2");
+            // console.log("in 2");
             trackTemplate.querySelector("td.recording>input").click();
         });
 
@@ -474,11 +474,12 @@ class EditorTabController extends TabController {
 
   // update track in database
   async #invokeSaveUpdatedTrack(album, trackUpdatedFinal) {
-    console.log("track identity updated", JSON.stringify(trackUpdatedFinal));
+    // console.log("track identity updated", JSON.stringify(trackUpdatedFinal));
+    // console.log("aliiiiiiiiiiiiiiiiiiiiiiiiii",album.identity);
     const resource =
       this.sharedProperties["service-origin"] +
       "/services/albums/" +
-      album.idenity +
+      album.identity +
       "/tracks";
     // console.log("resource",resource);
     const headers = {
@@ -584,7 +585,7 @@ class EditorTabController extends TabController {
       // Call the function to create or update the album
       const result = await this.#invokeCreateOrUpdateAlbum(updatedAlbum);
       currentAlbum.version = (currentAlbum.version || 0) + 1;
-      console.log("Album updated successfully:", result);
+      // console.log("Album updated successfully:", result);
       return result;
     } catch (error) {
       console.error("Error updating the album:", error);
@@ -646,7 +647,7 @@ class EditorTabController extends TabController {
       console.log("is returning");
       this.serverAlbumEditorSection.remove();
       this.viewsSectionSection.classList.remove("hidden");
-      console.log("1111");
+      // console.log("1111");
       this.processActivated();
 
 
@@ -720,7 +721,8 @@ class EditorTabController extends TabController {
 
   async processSelectTrackRecordUpdate(tableRow, track, trackFile) {
     try {
-      console.log("track recording before update", track.recording.description);
+      // console.log("trackkk",track);
+      // console.log("track recording before update", track.recording.description);
       if (!track.recording) track.recording = {};
 
       track.recording.identity = await this.#invokeInsertOrUpdateDocument(
@@ -730,7 +732,7 @@ class EditorTabController extends TabController {
       // console.log("aliiiiiiiiiiiiTrack",track.recording);
       // console.log("track.recoring.identity",track.recording.identity);
       tableRow.querySelector("td.recording>button").innerText = trackFile.name;
-      console.log("track recording after update", track.recording.description);
+      // console.log("track recording after update", track.recording.description);
 
 
       this.messageOutput.value = "ok";
@@ -745,32 +747,38 @@ class EditorTabController extends TabController {
         if (!track.recording) track.recording = {};
         track.recording.description = trackName.name;
         track.recording.identity = await this.#invokeInsertOrUpdateDocument(trackName);
-        console.log("track.recoring.identity",track.recording.identity);
+        // console.log("track.recoring.identity",track.recording.identity);
         tableRow.querySelector("td.recording>button").innerText = trackName.name;
 
         // Attach event listener for the submit button in the new track row
         const actionSubmit = tableRow.querySelector("tr>td.action>button.submit");
         actionSubmit.addEventListener("click", async (event) => {
-          console.log("1");
+          // console.log("1");
           if(!track.identity){
             try {
                 
-                console.log("in3");
+                // console.log("in3");
+                if (!track.recording) track.recording = {};
+
                 // Get values from the current track row's input fields
                 track.ordinal = window.parseInt(tableRow.querySelector("td.ordinal>input").value.trim() || "1");
                 track.title = tableRow.querySelector("td.title>input").value.trim() || null;
                 track.artist = tableRow.querySelector("td.artist>input").value.trim() || null;
                 track.genre = tableRow.querySelector("td.genre>input").value.trim() || null;
+                track.recording.description = tableRow.querySelector("td.recording>button").innerText || "";
 
-                console.log("trackkkkk",track);
+                // console.log("trackkkkk",track);
                 // Save track to the server
+                // track = {ordinal: track.ordinal, title:track.title, artist: track.artist, genre: track.genre };
 
                 const track_number = await this.#invokeSaveTrack(album, track);
                 console.log("track_number",track_number);
-                // this.#processQuerySingleTrack(album,track)
+                if (!album.trackReferences) album.trackReferences = [];
+                album.trackReferences.push(track_number);
+                this.#processQuerySingleTrack(album,track);
 
-                
-                // if (track_number) await this.#invokeSaveUpdatedTrack(albumIdentity,track_number);
+           
+                // if (track_number) await this.#invokeSaveUpdatedTrack(album,track_number);
                 // const track_created = await this.#invokeGetTrack(track_number);
                 // console.log("track_createdtrack_createdtrack_created",track_created);
                 // track_created.version = (track_created.version || 0) + 1;
