@@ -1,0 +1,42 @@
+body>main>article.center {
+	section.preferences {
+		div.avatar,div.credentials,div.personal,fieldset.phones {
+			background-color: var(--corporate-division-color);
+
+			span.name,span.address {
+				vertical-align: middle;
+			}
+
+			label {
+				width: 6rem;
+				text-align: right;
+			}
+
+			legend {
+				font-size: 75%;
+			}
+
+			button>img {
+				height: 6rem;
+				width: 6rem;
+			}
+
+			input.email,input.password {
+				width: 20rem;
+			}
+
+			span.address input {
+				width: 15rem;
+			}
+
+			input.phone {
+				margin-right: 0.5rem;
+			}
+
+			button.add {
+				display: block;
+			}
+		}
+	}
+}
+

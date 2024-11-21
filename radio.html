@@ -1,0 +1,304 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="author" content="Sascha Baumeister" />
+		<meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
+		<meta name="dcterms.rights" content="all rights reserved" />
+		<meta name="dcterms.dateCopyrighted" content="2019" />
+
+		<title>Radio-App</title>
+		<link type="image/png" rel="icon" href="image/radio.png"/>
+		<link type="text/css" rel="stylesheet" href="style/general.css" />
+		<link type="text/css" rel="stylesheet" href="style/authentication.css" />
+		<link type="text/css" rel="stylesheet" href="style/preferences.css" />
+		<link type="text/css" rel="stylesheet" href="style/server-editor.css" />
+		<link type="text/css" rel="stylesheet" href="style/server-listener.css" />
+		<script type="module" async="true" src="script/authentication-tab-controller.js"></script>
+		<script type="module" async="true" src="script/preferences-tab-controller.js"></script>
+		<script type="module" async="true" src="script/server-editor-tab-controller.js"></script>
+		<script type="module" async="true" src="script/server-listener-tab-controller.js"></script>
+
+		<template class="authentication">
+			<section class="authentication">
+				<fieldset class="credentials">
+					<legend>Authentifizierung</legend>
+					<div class="email">
+						<label>Email</label>
+						<input type="email" />
+					</div>
+					<div class="password">
+						<label>Passwort</label>
+						<input type="password" />
+					</div>
+					<div class="control">
+						<button type="button" class="authenticate">login</button>
+					</div>
+				</fieldset>
+			</section>
+		</template>
+
+		<template class="preferences">
+			<section class="preferences">
+				<div class="avatar">
+					<label>Avatar</label>
+					<button type="button">
+						<img ondragover="event.preventDefault()" ondrop="event.preventDefault()" />
+					</button>
+					<input type="file" class="hidden" accept="image/*" />
+				</div>
+				<div class="credentials">
+					<div class="email">
+						<label>Email</label>
+						<input type="email" />
+					</div>
+					<div class="password">
+						<label>Passwort</label>
+						<input type="password" />
+					</div>
+					<div class="group">
+						<label>Gruppe</label>
+						<select autocomplete="off">
+							<option value="USER">Benutzer</option>
+							<option value="ADMIN">Administrator</option>
+						</select>
+					</div>
+				</div>
+				<div class="personal">
+					<span class="name">
+						<div class="title">
+							<label>Titel</label>
+							<input type="text" />
+						</div>
+						<div class="surname">
+							<label>Nachname</label>
+							<input type="text" />
+						</div>
+						<div class="forename">
+							<label>Vorname</label>
+							<input type="text" />
+						</div>
+					</span>
+					<span class="address">
+						<div class="postcode">
+							<label>PLZ</label>
+							<input type="text" />
+						</div>
+						<div class="street">
+							<label>Straße</label>
+							<input type="text" />
+						</div>
+						<div class="city">
+							<label>Ort</label>
+							<input type="text" />
+						</div>
+						<div class="country">
+							<label>Staat</label>
+							<input type="text" />
+						</div>
+					</span>
+				</div>
+				<fieldset class="phones">
+					<legend>Telefon</legend>
+					<span></span>
+					<button type="button" class="add">hinzufügen</button>
+				</fieldset>
+				<div class="control">
+					<button type="button" class="submit">speichern</button>
+				</div>
+			</section>
+		</template>
+
+		<template class="server-editor">
+			<section class="server-editor">
+				<div class="albums">
+					<h1>Alben</h1>
+					<div>
+						<table>
+							<thead>
+								<tr>
+									<th>Cover</th>
+									<th>Künstler</th>
+									<th>Titel</th>
+									<th>Genre</th>
+									<th>Jahr</th>
+									<th>Tracks</th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="control">
+					<button type="button" class="create">neu</button>
+				</div>
+			</section>
+		</template>
+
+		<template class="server-editor-row">
+			<tr>
+				<td class="access"><button type="button"><img /></button></td>
+				<td class="artist text"></td>
+				<td class="title text"></td>
+				<td class="genre text"></td>
+				<td class="release-year number"></td>
+				<td class="track-count number"></td>
+			</tr>
+		</template>
+
+		<template class="server-album-editor">
+			<section class="server-album-editor">
+				<div class="album">
+					<span class="cover">
+						<label>Cover</label>
+						<button type="button">
+							<img ondragover="event.preventDefault()" ondrop="event.preventDefault()" />
+						</button>
+						<input type="file" class="hidden" accept="image/*" />
+					</span>
+					<span class="other">
+						<div class="title">
+							<label>Titel</label>
+							<input type="text" />
+						</div>
+						<div class="release-year">
+							<label>Jahr</label>
+							<input type="number" />
+						</div>
+						<div class="track-count">
+							<label>Tracks</label>
+							<input type="number" min="0" max="99" />
+						</div>
+					</span>
+				</div>
+				<div class="control">
+					<button type="button" class="submit">speichern</button>
+					<button type="button" class="delete">löschen</button>
+					<button type="button" class="cancel">zurück</button>
+				</div>
+				<div class="tracks">
+					<h1>Tracks</h1>
+					<div class="data">
+						<table>
+							<thead>
+								<tr>
+									<th>Nummer</th>
+									<th>Künstler</th>
+									<th>Titel</th>
+									<th>Genre</th>
+									<th>Aufnahme</th>
+									<th>Aktion</th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<div class="control">
+						<button type="button" class="create">neu</button>
+					</div>
+				</div>
+			</section>
+		</template>
+
+		<template class="server-album-editor-row">
+			<tr>
+				<td class="ordinal"><input type="number" min="1" max="99" size="2" value = "1" /></td>
+				<td class="artist"><input type="text" /></td>
+				<td class="title"><input type="text" /></td>
+				<td class="genre"><input type="text" /></td>
+				<td class="recording">
+					<button type="button">auswählen</button>
+					<input type="file" class="hidden" accept="audio/wav, audio/x-wav, audio/mpeg, audio/mp4" />
+				</td>
+				<td class="action">
+					<button type="button" class="submit">speichern</button>
+					<button type="button" class="remove">entfernen</button>
+				</td>
+			</tr>
+		</template>
+
+		<template class="server-listener-query">
+			<section class="server-listener-query">
+				<h1>Track-Auswahl nach Genres und/oder Künstlern</h1>
+				<div class="criteria">
+					<span class="genre">
+						<select multiple="true" size="6"></select>
+					</span>
+					<span class="artist">
+						<select multiple="true" size="6"></select>
+					</span>
+					<span class="control">
+						<label>Lautstärke</label>
+						<input type="range" class="volume" min="0" max="1" step="0.01" value="0.5" title="0% bis 100%" />
+						<label>Kompressionsverhältnis</label>
+						<input type="range" class="compression-ratio" min="-1" max="+1" step="0.1" value="0" title="0.5 bis 2" />
+						<label>Crossfade-Dauer</label>
+						<input type="range" class="crossfade" min="5" max="15" step="0.1" value="10" title="5 bis 15 Sekunden" />
+					</span>
+				</div>
+				<div class="control">
+					<button type="button" class="query">suchen & hinzufügen</button>
+				</div>
+			</section>
+		</template>
+
+		<template class="server-listener-playlist">
+			<section class="server-listener-playlist">
+				<div class="data">
+					<span class="tracks">
+						<h1>Playliste</h1>
+						<div>
+							<table>
+								<thead>
+									<tr>
+										<th>Avatar</th>
+										<th>Künstler</th>
+										<th>Titel</th>
+										<th>Dauer</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</span>
+					<span class="lyrics">
+						<h1>Songtext</h1>
+						<div></div>
+					</span>
+				</div>
+			</section>
+		</template>
+
+		<template class="server-listener-playlist-row">
+			<tr>
+				<td class="avatar"><img /></td>
+				<td class="artist"></td>
+				<td class="title"></td>
+				<td class="duration"></td>
+			</tr>
+		</template>
+	</head>	
+
+	<body>
+		<header>
+			<nav class="tabs">
+				<button type="button" class="authentication">Login</button>
+				<button type="button" class="preferences">Einstellungen</button>
+				<button type="button" class="server-editor">Editor</button>
+				<button type="button" class="server-listener">Radio</button>
+			</nav>
+			<img class="logo" src="image/logo.png" />
+		</header>
+
+		<main>
+			<article class="left hidden"></article>
+			<article class="center"></article>
+			<article class="right hidden"></article>
+		</main>
+
+		<footer>
+			<label>Nachricht</label>
+			<input type="text" class="message" readonly="true" />
+		</footer>
+	</body>
+</html>

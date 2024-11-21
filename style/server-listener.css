@@ -1,0 +1,86 @@
+body>main>article.center {
+	section.server-listener-query {
+		div.criteria {
+			span {
+				vertical-align: middle;
+			}
+
+			span.genre,span.artist {
+				select {
+					height: 7rem;
+					width: 15rem;
+				}
+			}
+
+			span.control {
+				label,input {
+					display: block;
+				}
+			}
+		}
+	}
+
+	section.server-listener-playlist {
+		div.data {
+			span {
+				vertical-align: top;
+				height: 10;
+			}
+
+			span.tracks>div {
+				height: 10rem;
+				width: 25.25rem;
+				overflow-y: scroll;
+				padding-right: 1rem;
+
+				table {
+					thead>tr {
+						border-bottom-style: solid;
+						border-bottom-width: 1px;
+					}
+
+					th:not(:first-of-type),td:not(:first-of-type) {
+						border-left-style: solid;
+						border-left-width: 1px;
+					}
+
+					th {
+						padding: 0.5rem;
+						background: var(--corporate-thead-bgcolor);
+						position: sticky;
+						top: 0;
+					}
+
+					td {
+						padding: 0 0.5rem;
+					}
+
+					td.number {
+						text-align: right;
+					}
+
+					td.avatar>img {
+						height: 2rem;
+						width: 2rem;
+					}
+				}
+			}
+
+			span.lyrics {
+				margin-left: 1rem;
+			}
+
+			span.lyrics>div {
+				height: 9rem;
+				width: 20rem;
+				overflow-y: scroll;
+
+				a {
+					pointer-events: none;
+					text-decoration: none;
+					color: black;
+				}
+			}
+		}
+	}
+}
