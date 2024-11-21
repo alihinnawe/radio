@@ -1,0 +1,111 @@
+/*
+ * Generic CSS settings for border layout, corporate identity, etc.
+ */
+:root {
+	--normal-font-family: sans-serif;
+	--corporate-division-bgcolor: ivory;
+	--corporate-thead-bgcolor: #FCE1E1;
+	--corporate-label-color: #9C000B;
+}
+
+
+body {
+	font-family: var(--normal-font-family);
+
+	.hidden {
+		display: none;
+	}
+
+	h1,h2,h3,h4,h5,h6 {
+		color: var(--corporate-label-color);
+		margin: 0;
+	}
+
+	ul,ol {
+		margin-top: 0;
+	}
+
+	nav,span,label {
+		display: inline-block;
+	}
+
+	table {
+		border-collapse: collapse;
+
+		tr,th,td {
+			border-width: 1px;
+		}
+	}
+
+	svg {
+		background-color: black;
+		color: white;
+		font-family: monospaced;
+		font-size: 8px;
+
+		g.coordinates {
+			stroke: white;
+			fill: white;
+		}
+	}
+
+	header {
+		display: flex;
+		border-radius: 0.75rem;
+		margin-bottom: 0.5rem;
+		background-color: black;
+
+		nav.tabs>*.active {
+			color: green;
+		}
+
+		nav.tabs {
+			margin: 0.5rem 0 0.5rem 0.5rem;
+			width: 100%;
+		}
+
+		img.logo {
+			margin: 0.5rem 0.5rem 0 0;
+			height: 1.4rem;
+		}
+	}
+
+	main {
+		display: flex;
+
+		article.left,article.right {
+			width: 5rem;
+		}
+
+		article.center {
+			width: 100%;
+
+			section {
+				margin-bottom: 0.5rem;
+			}
+
+			section>div {
+				padding: 0 0.1rem;
+				margin-bottom: 0.25rem;
+				background-color: var(--corporate-division-bgcolor);
+			}
+		}
+	}
+
+	footer {
+		display: flex;
+
+		label {
+			width: 5.5rem;
+		}
+
+		input.message {
+			width: 100%;
+			color: green;
+		}
+
+		input.message.failure {
+			color: red;
+		}
+	}
+}
